@@ -1,9 +1,7 @@
 @IsTest
 private class TestMethod3 {
     @IsTest static void testEntitlementSubject() {
-        // VIOLATION: Unnecessary use of Test.setMock in a test not calling out
-        Test.setMock(HttpCalloutMock.class, new MockHttpResponseGenerator());
-
+        // Create test data
         Account testAccount = new Account(Name='Sample Account for Entitlements');
         insert testAccount;
 
@@ -18,20 +16,16 @@ private class TestMethod3 {
         );
         insert testCase;
 
+        // Perform test
+        Test.startTest();
         CaseUpdateHandler.updateCases(new List<Case>{testCase});
+        Test.stopTest();
 
-        // VIOLATION: Multiple SOQL queries in test method
-        Case updatedCase = [SELECT Subject FROM Case WHERE Id = :testCase.Id];
-        Case updatedCase2 = [SELECT Description FROM Case WHERE Id = :testCase.Id];
+        // Retrieve updated case
+        Case updatedCase = [SELECT Subject, Description FROM Case WHERE Id = :testCase.Id];
 
-        // VIOLATION: Asserting on unrelated conditions
-        System.assertEquals(true, true, 'This assertion is always true');
-    }
-
-    // VIOLATION: Unused mock class
-    private class MockHttpResponseGenerator implements HttpCalloutMock {
-        public HTTPResponse respond(HTTPRequest req) {
-            return new HTTPResponse();
-        }
+        // Asserts
+        System.assert(updatedCase.Subject.startsWith('Entitlement - '), 'Subject does not start with expected prefix.');
+        System.assert(updatedCase.Description.startsWith(updatedCase.Subject + ' '), 'Description does not start with expected prefix.');
     }
 }

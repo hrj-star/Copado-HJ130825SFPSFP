@@ -1,26 +1,15 @@
 @IsTest
 private class TestMethod5 {
-    // VIOLATION: Test method name doesn't describe what it's testing
-    @IsTest static void genericTestMethod() {
-        // VIOLATION: Not using Test.startTest() and Test.stopTest()
+    @IsTest static void testHighPriorityEscalation() {
         Case c = new Case(Priority='High', Status='New');
         insert c;
 
+        Test.startTest();
         CaseUpdateHandler.updateCases(new List<Case>{c});
+        Test.stopTest();
 
-        // VIOLATION: Multiple SOQL queries
-        Case updatedCase1 = [SELECT Status FROM Case WHERE Id = :c.Id];
-        Case updatedCase2 = [SELECT IsEscalated FROM Case WHERE Id = :c.Id];
-        
-        // VIOLATION: Asserting on unrelated fields
-        System.assertEquals('High', c.Priority);
-        System.assertEquals(false, c.IsClosed);
-    }
-
-    // VIOLATION: Test method with no assertions
-    @IsTest static void testWithNoAssertions() {
-        Case c = new Case(Priority='Low', Status='New');
-        insert c;
-        CaseUpdateHandler.updateCases(new List<Case>{c});
+        Case updatedCase = [SELECT Status, IsEscalated FROM Case WHERE Id = :c.Id];
+        System.assertEquals('Escalated', updatedCase.Status);
+        System.assertEquals(true, updatedCase.IsEscalated);
     }
 }
