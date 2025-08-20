@@ -1,20 +1,21 @@
 @IsTest
 private class TestMethod2 {
     @IsTest static void testContactOptOut() {
-        // VIOLATION: Test data creation in the test method
+        // Setup - Create a Contact with HasOptedOutOfEmail = true
         Contact testContact = new Contact(LastName='Doe', HasOptedOutOfEmail=true);
         insert testContact;
         
+        // Setup - Create a Case related to the Contact
         Case testCase = new Case(ContactId=testContact.Id, Description='Initial');
         insert testCase;
 
-        // VIOLATION: No Test.startTest() and Test.stopTest()
+        // Act - Call the method under test
+        Test.startTest();
         CaseUpdateHandler.updateCases(new List<Case>{testCase});
+        Test.stopTest();
 
-        // VIOLATION: Query in test method
+        // Assert - Retrieve the updated case and verify changes
         testCase = [SELECT Description FROM Case WHERE Id = :testCase.Id];
-        
-        // VIOLATION: System.assert instead of System.assertEquals
-        System.assert(testCase.Description == 'Phone Call ONLY - Initial');
+        System.assertEquals('Phone Call ONLY - Initial', testCase.Description, 'Case Description is not updated as expected.');
     }
 }
